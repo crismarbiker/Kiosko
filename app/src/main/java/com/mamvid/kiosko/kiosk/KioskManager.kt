@@ -60,11 +60,14 @@ class KioskManager(private val activity: Activity) {
     }
 
     fun setupWindowFlags() {
-        activity.window.addFlags(
-            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
-        )
+        try {
+            activity.window.addFlags(
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+            )
+        } catch (e: Exception) {
+            Logger.w(tag, "setupWindowFlags failed: ${e.message}")
+        }
     }
 
     private fun startLockTask() {

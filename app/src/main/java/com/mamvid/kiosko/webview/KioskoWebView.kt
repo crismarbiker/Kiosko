@@ -19,15 +19,14 @@ class KioskoWebView @JvmOverloads constructor(
     private val tag = "KioskoWebView"
 
     init {
-        configureSettings()
-        configureCookies()
+        try { configureSettings() } catch (e: Exception) { Logger.w(tag, "configureSettings failed: ${e.message}") }
+        try { configureCookies() } catch (e: Exception) { Logger.w(tag, "configureCookies failed: ${e.message}") }
     }
 
     private fun configureSettings() {
         settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
-            databaseEnabled = true
             allowFileAccess = true
             allowContentAccess = true
             setSupportMultipleWindows(true)

@@ -65,9 +65,9 @@ class AppPreferences(private val context: Context) {
         url = this[KEY_URL] ?: AppConfig.DEFAULT_URL,
         backupUrl = this[KEY_BACKUP_URL] ?: AppConfig.DEFAULT_BACKUP_URL,
         adminPassword = this[KEY_PASSWORD] ?: AppConfig.DEFAULT_PASSWORD,
-        kioskModeEnabled = this[KEY_KIOSK_MODE] ?: true,
-        exitProtectionEnabled = this[KEY_EXIT_PROTECTION] ?: true,
-        fullscreenEnabled = this[KEY_FULLSCREEN] ?: true,
+        kioskModeEnabled = this[KEY_KIOSK_MODE] ?: false,
+        exitProtectionEnabled = this[KEY_EXIT_PROTECTION] ?: false,
+        fullscreenEnabled = this[KEY_FULLSCREEN] ?: false,
         orientation = runCatching {
             ScreenOrientation.valueOf(this[KEY_ORIENTATION] ?: ScreenOrientation.AUTO.name)
         }.getOrDefault(ScreenOrientation.AUTO),

@@ -62,14 +62,20 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
+        try {
+            binding = ActivityMainBinding.inflate(layoutInflater)
+        } catch (e: Exception) {
+            Logger.e(tag, "Layout inflation failed: ${e.message}")
+            finish()
+            return
+        }
         setContentView(binding.root)
 
         kioskManager = KioskManager(this)
         printHandler = PrintHandler(this)
 
         kioskManager.setupWindowFlags()
-        setupWebView()
+        try { setupWebView() } catch (e: Exception) { Logger.e(tag, "setupWebView failed: ${e.message}") }
         setupHiddenAdminAccess()
         setupBackPress()
         setupRetryButton()
