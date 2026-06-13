@@ -4,13 +4,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/splash_background">
+    android:background="#FFFFFF">
 
-    <!-- App logo (LogoKiosko.png) - uses drawable to avoid mipmap resolution issues -->
+    <!-- App logo (LogoKiosko.png) - smaller size -->
     <ImageView
         android:id="@+id/imgAppLogo"
-        android:layout_width="180dp"
-        android:layout_height="180dp"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
         android:src="@drawable/logo_app"
         android:scaleType="fitCenter"
         android:contentDescription="@string/app_name"
@@ -19,17 +19,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_chainStyle="packed"
-        app:layout_constraintVertical_bias="0.4" />
+        app:layout_constraintVertical_bias="0.38" />
 
-    <!-- Company logo (LogoMamVid.png) -->
+    <!-- Company logo (LogoMamVid.png) - full width, larger height -->
     <ImageView
         android:id="@+id/imgCompanyLogo"
-        android:layout_width="160dp"
-        android:layout_height="70dp"
+        android:layout_width="0dp"
+        android:layout_height="130dp"
         android:src="@drawable/logo_company"
         android:scaleType="fitCenter"
         android:contentDescription="MamVid"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="28dp"
+        android:layout_marginHorizontal="24dp"
         app:layout_constraintTop_toBottomOf="@id/imgAppLogo"
         app:layout_constraintBottom_toTopOf="@id/tvAppName"
         app:layout_constraintStart_toStartOf="parent"
@@ -44,7 +45,7 @@
         android:textStyle="bold"
         android:textColor="@color/splash_text"
         android:letterSpacing="0.08"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="20dp"
         app:layout_constraintTop_toBottomOf="@id/imgCompanyLogo"
         app:layout_constraintBottom_toTopOf="@id/tvVersion"
         app:layout_constraintStart_toStartOf="parent"

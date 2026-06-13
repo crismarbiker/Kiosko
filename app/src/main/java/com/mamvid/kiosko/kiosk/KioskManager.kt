@@ -31,16 +31,24 @@ class KioskManager(private val activity: Activity) {
     }
 
     fun enableFullscreen() {
-        val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
-        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        controller.hide(WindowInsetsCompat.Type.systemBars())
-        WindowCompat.setDecorFitsSystemWindows(activity.window, false)
+        try {
+            val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+            WindowCompat.setDecorFitsSystemWindows(activity.window, false)
+        } catch (e: Exception) {
+            Logger.w(tag, "enableFullscreen failed: ${e.message}")
+        }
     }
 
     fun showSystemBars() {
-        val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
-        controller.show(WindowInsetsCompat.Type.systemBars())
-        WindowCompat.setDecorFitsSystemWindows(activity.window, true)
+        try {
+            val controller = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
+            controller.show(WindowInsetsCompat.Type.systemBars())
+            WindowCompat.setDecorFitsSystemWindows(activity.window, true)
+        } catch (e: Exception) {
+            Logger.w(tag, "showSystemBars failed: ${e.message}")
+        }
     }
 
     fun enableKeepScreenOn() {

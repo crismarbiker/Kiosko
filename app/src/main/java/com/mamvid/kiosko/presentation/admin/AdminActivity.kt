@@ -1,15 +1,14 @@
 package com.mamvid.kiosko.presentation.admin
 
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.MenuItem
 import android.widget.ArrayAdapter
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mamvid.kiosko.BuildConfig
 import com.mamvid.kiosko.core.domain.model.AppSettings
 import com.mamvid.kiosko.core.domain.model.ScreenOrientation
@@ -17,8 +16,6 @@ import com.mamvid.kiosko.core.utils.Logger
 import com.mamvid.kiosko.core.utils.NetworkUtils
 import com.mamvid.kiosko.core.utils.showToast
 import com.mamvid.kiosko.databinding.ActivityAdminBinding
-import com.mamvid.kiosko.presentation.main.MainActivity
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class AdminActivity : AppCompatActivity() {
@@ -93,7 +90,7 @@ class AdminActivity : AppCompatActivity() {
         binding.btnSave.setOnClickListener { saveSettings() }
 
         binding.btnClearCache.setOnClickListener {
-            AlertDialog.Builder(this)
+            MaterialAlertDialogBuilder(this)
                 .setTitle("Limpiar Caché")
                 .setMessage("¿Desea borrar el caché del WebView?")
                 .setPositiveButton("Sí") { _, _ ->
@@ -104,7 +101,7 @@ class AdminActivity : AppCompatActivity() {
         }
 
         binding.btnClearCookies.setOnClickListener {
-            AlertDialog.Builder(this)
+            MaterialAlertDialogBuilder(this)
                 .setTitle("Limpiar Cookies")
                 .setMessage("¿Desea borrar todas las cookies?")
                 .setPositiveButton("Sí") { _, _ ->
@@ -115,7 +112,7 @@ class AdminActivity : AppCompatActivity() {
         }
 
         binding.btnRestart.setOnClickListener {
-            AlertDialog.Builder(this)
+            MaterialAlertDialogBuilder(this)
                 .setTitle("Reiniciar Aplicación")
                 .setMessage("¿Desea reiniciar la aplicación?")
                 .setPositiveButton("Reiniciar") { _, _ ->
@@ -126,7 +123,7 @@ class AdminActivity : AppCompatActivity() {
         }
 
         binding.btnResetDefaults.setOnClickListener {
-            AlertDialog.Builder(this)
+            MaterialAlertDialogBuilder(this)
                 .setTitle("Restablecer Valores")
                 .setMessage("¿Desea restablecer todos los valores a los predeterminados?")
                 .setPositiveButton("Restablecer") { _, _ ->
@@ -178,8 +175,8 @@ class AdminActivity : AppCompatActivity() {
     }
 
     private fun restartApp() {
-        val intent = packageManager.getLaunchIntentForPackage(packageName)
-        intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+        val intent = packageManager.getLaunchIntentForPackage(packageName) ?: return
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
         finishAffinity()
     }

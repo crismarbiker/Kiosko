@@ -161,11 +161,12 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
 
     private fun triggerAdminAccess() {
         Logger.i(tag, "Admin access triggered")
-        if (currentSettings.kioskModeEnabled) kioskManager.disableKioskMode()
-
         val dialog = AdminAuthDialog()
         dialog.currentSettings = currentSettings
         dialog.onAuthenticated = {
+            if (currentSettings.kioskModeEnabled) {
+                try { kioskManager.disableKioskMode() } catch (e: Exception) { Logger.w(tag, "disableKiosk: ${e.message}") }
+            }
             startActivity(Intent(this, AdminActivity::class.java))
         }
         dialog.show(supportFragmentManager, "admin_auth")
@@ -269,19 +270,23 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
     }
 
     private fun applySettings(settings: AppSettings) {
-        currentSettings = settings
+        try {
+            currentSettings = settings
 
-        requestedOrientation = when (settings.orientation) {
-            ScreenOrientation.PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            ScreenOrientation.LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-            ScreenOrientation.AUTO -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            requestedOrientation = when (settings.orientation) {
+                ScreenOrientation.PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                ScreenOrientation.LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                ScreenOrientation.AUTO -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            }
+
+            if (settings.keepScreenOn) kioskManager.enableKeepScreenOn()
+            else kioskManager.disableKeepScreenOn()
+
+            if (settings.kioskModeEnabled) kioskManager.enableKioskMode()
+            else kioskManager.disableKioskMode()
+        } catch (e: Exception) {
+            Logger.w(tag, "applySettings error: ${e.message}")
         }
-
-        if (settings.keepScreenOn) kioskManager.enableKeepScreenOn()
-        else kioskManager.disableKeepScreenOn()
-
-        if (settings.kioskModeEnabled) kioskManager.enableKioskMode()
-        else kioskManager.disableKioskMode()
     }
 
     private fun loadUrl(url: String) {
@@ -351,14 +356,16 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus && currentSettings.kioskModeEnabled) {
-            kioskManager.enableFullscreen()
+            try { kioskManager.enableFullscreen() } catch (e: Exception) { Logger.w(tag, "onWindowFocus: ${e.message}") }
         }
     }
 
     override fun onResume() {
         super.onResume()
         binding.webView.onResume()
-        if (currentSettings.kioskModeEnabled) kioskManager.enableKioskMode()
+        if (currentSettings.kioskModeEnabled) {
+            try { kioskManager.enableKioskMode() } catch (e: Exception) { Logger.w(tag, "onResume: ${e.message}") }
+        }
     }
 
     override fun onPause() {
