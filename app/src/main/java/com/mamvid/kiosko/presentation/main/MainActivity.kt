@@ -79,57 +79,56 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
     }
 
     private fun setupWebView() {
-        binding.webView.apply {
-            webViewClient = KioskoWebViewClient(
-                allowSslErrors = currentSettings.allowSslErrors,
-                callback = object : KioskoWebViewClient.WebViewClientCallback {
-                    override fun onPageStarted(url: String) {
-                        viewModel.onPageStarted(url)
-                        binding.progressBar.visible()
-                    }
-                    override fun onPageFinished(url: String) {
-                        viewModel.onPageLoaded(url)
-                    }
-                    override fun onError(errorCode: Int, description: String, url: String) {
-                        viewModel.onPageError(errorCode, description)
-                        binding.progressBar.gone()
-                    }
-                    override fun onHttpError(statusCode: Int, url: String) {
-                        Logger.w(tag, "HTTP error $statusCode")
-                    }
+        // Avoid `apply {}` on View to prevent `tag` resolving to View.getTag() inside nested objects
+        binding.webView.webViewClient = KioskoWebViewClient(
+            allowSslErrors = currentSettings.allowSslErrors,
+            callback = object : KioskoWebViewClient.WebViewClientCallback {
+                override fun onPageStarted(url: String) {
+                    viewModel.onPageStarted(url)
+                    binding.progressBar.visible()
                 }
-            )
-
-            webChromeClient = KioskoWebChromeClient(
-                callback = object : KioskoWebChromeClient.ChromeClientCallback {
-                    override fun onProgressChanged(progress: Int) {
-                        binding.progressBar.progress = progress
-                        if (progress == 100) binding.progressBar.gone()
-                    }
-                    override fun onCreatePopupWindow(resultMsg: Message): Boolean {
-                        openPopupOverlay(resultMsg)
-                        return true
-                    }
-                    override fun onClosePopupWindow() {
-                        closePopupOverlay()
-                    }
-                    override fun onShowFileChooser(
-                        filePathCallback: ValueCallback<Array<Uri>>,
-                        fileChooserParams: WebChromeClient.FileChooserParams
-                    ): Boolean {
-                        this@MainActivity.filePathCallback?.onReceiveValue(null)
-                        this@MainActivity.filePathCallback = filePathCallback
-                        filePickerLauncher.launch("*/*")
-                        return true
-                    }
+                override fun onPageFinished(url: String) {
+                    viewModel.onPageLoaded(url)
                 }
-            )
+                override fun onError(errorCode: Int, description: String, url: String) {
+                    viewModel.onPageError(errorCode, description)
+                    binding.progressBar.gone()
+                }
+                override fun onHttpError(statusCode: Int, url: String) {
+                    Logger.w(tag, "HTTP error $statusCode")
+                }
+            }
+        )
 
-            addJavascriptInterface(
-                JavaScriptBridge(context, this@MainActivity),
-                AppConfig.JS_BRIDGE_NAME
-            )
-        }
+        binding.webView.webChromeClient = KioskoWebChromeClient(
+            callback = object : KioskoWebChromeClient.ChromeClientCallback {
+                override fun onProgressChanged(progress: Int) {
+                    binding.progressBar.progress = progress
+                    if (progress == 100) binding.progressBar.gone()
+                }
+                override fun onCreatePopupWindow(resultMsg: Message): Boolean {
+                    openPopupOverlay(resultMsg)
+                    return true
+                }
+                override fun onClosePopupWindow() {
+                    closePopupOverlay()
+                }
+                override fun onShowFileChooser(
+                    filePathCallback: ValueCallback<Array<Uri>>,
+                    fileChooserParams: WebChromeClient.FileChooserParams
+                ): Boolean {
+                    this@MainActivity.filePathCallback?.onReceiveValue(null)
+                    this@MainActivity.filePathCallback = filePathCallback
+                    filePickerLauncher.launch("*/*")
+                    return true
+                }
+            }
+        )
+
+        binding.webView.addJavascriptInterface(
+            JavaScriptBridge(this, this),
+            AppConfig.JS_BRIDGE_NAME
+        )
     }
 
     private fun setupHiddenAdminAccess() {

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:ns1="http://schemas.android.com/tools">
+    <color name="colorBackground">#F8FAFC</color>
+    <color name="colorBackgroundDark">#0F172A</color>
+    <color name="colorDivider">#E2E8F0</color>
+    <color name="colorError">#D32F2F</color>
+    <color name="colorOnBackground">#1E293B</color>
+    <color name="colorOnBackgroundDark">#F1F5F9</color>
+    <color name="colorOnBackgroundSecondary">#64748B</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+    <color name="colorOnSecondary">#FFFFFF</color>
+    <color name="colorOnSurface">#1E293B</color>
+    <color name="colorOnSurfaceDark">#F1F5F9</color>
+    <color name="colorPrimary">#1565C0</color>
+    <color name="colorPrimaryContainer">#DBEAFE</color>
+    <color name="colorPrimaryVariant">#003c8f</color>
+    <color name="colorSecondary">#0288D1</color>
+    <color name="colorSuccess">#388E3C</color>
+    <color name="colorSurface">#FFFFFF</color>
+    <color name="colorSurfaceDark">#1E293B</color>
+    <color name="colorWarning">#F57C00</color>
+    <color name="splash_background">#FFFFFF</color>
+    <color name="splash_text">#1E293B</color>
+    <color name="splash_text_secondary">#64748B</color>
+    <dimen name="admin_trigger_size">60dp</dimen>
+    <dimen name="corner_radius_button">24dp</dimen>
+    <dimen name="corner_radius_card">12dp</dimen>
+    <dimen name="progress_bar_height">3dp</dimen>
+    <dimen name="spacing_large">24dp</dimen>
+    <dimen name="spacing_medium">16dp</dimen>
+    <dimen name="spacing_small">8dp</dimen>
+    <dimen name="spacing_xlarge">32dp</dimen>
+    <string name="admin_password_hint">Contraseña</string>
+    <string name="admin_saved">Configuración guardada</string>
+    <string name="admin_title">Panel de Administración</string>
+    <string name="admin_wrong_password">Contraseña incorrecta</string>
+    <string name="app_name">Kiosko</string>
+    <string name="app_version">v1.0.0</string>
+    <string name="btn_cancel">Cancelar</string>
+    <string name="btn_restart">Reiniciar</string>
+    <string name="btn_retry">Reintentar</string>
+    <string name="btn_save">Guardar</string>
+    <string name="cd_logo">Logo</string>
+    <string name="cd_no_connection">Sin conexión</string>
+    <string name="error_generic">Error al cargar la página</string>
+    <string name="error_no_connection">Sin conexión a internet</string>
+    <string name="error_reconnecting">Reconectando...</string>
+    <string name="error_ssl">Error de certificado SSL</string>
+    <string name="file_provider_authority" translatable="false">com.mamvid.kiosko.fileprovider</string>
+    <style name="Theme.Kiosko" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryVariant">@color/colorPrimaryVariant</item>
+        <item name="colorSecondary">@color/colorSecondary</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary</item>
+        <item name="android:colorBackground">@color/colorBackground</item>
+        <item name="colorSurface">@color/colorSurface</item>
+        <item name="colorError">@color/colorError</item>
+        <item name="android:windowBackground">@color/colorBackground</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" ns1:targetApi="o_mr1">shortEdges</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Kiosko.Dialog</item>
+    </style>
+    <style name="Theme.Kiosko.Admin" parent="Theme.Kiosko">
+        <item name="android:statusBarColor">@color/colorSurface</item>
+        <item name="android:navigationBarColor">@color/colorBackground</item>
+        <item name="android:windowLightStatusBar" ns1:targetApi="m">true</item>
+    </style>
+    <style name="Theme.Kiosko.Splash" parent="Theme.Kiosko">
+        <item name="android:windowBackground">@color/splash_background</item>
+        <item name="android:statusBarColor">@color/splash_background</item>
+        <item name="android:navigationBarColor">@color/splash_background</item>
+    </style>
+    <style name="ThemeOverlay.Kiosko.Dialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.Kiosko.Button.Dialog</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.Kiosko.Button.Dialog.Outline</item>
+    </style>
+    <style name="Widget.Kiosko.Button.Dialog" parent="Widget.MaterialComponents.Button">
+        <item name="android:textAllCaps">false</item>
+    </style>
+    <style name="Widget.Kiosko.Button.Dialog.Outline" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textAllCaps">false</item>
+    </style>
+</resources>
