@@ -292,11 +292,17 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
     }
 
     private fun observeViewModel() {
+        // Track loaded URL to avoid redundant reloads when StateFlow emits the same URL twice
+        // (initial placeholder value vs actual DataStore value)
+        var loadedUrl = ""
+
         lifecycleScope.launch {
             viewModel.settings.collect { settings ->
-                val firstLoad = binding.webView.url == null
                 applySettings(settings)
-                if (firstLoad) loadUrl(settings.url)
+                if (settings.url.isNotBlank() && settings.url != loadedUrl) {
+                    loadedUrl = settings.url
+                    loadUrl(settings.url)
+                }
             }
         }
 
@@ -315,6 +321,7 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
                 }
 
                 if (state.shouldReload) {
+                    loadedUrl = ""   // allow reload even for same URL
                     loadUrl(currentSettings.url)
                     viewModel.onReloadConsumed()
                 }

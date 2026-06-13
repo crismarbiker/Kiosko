@@ -5,7 +5,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
@@ -13,7 +12,6 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
         android:name=".KioskoApplication"
@@ -30,6 +28,7 @@
         android:largeHeap="true"
         tools:targetApi="31">
 
+        <!-- Splash / Entry point -->
         <activity
             android:name=".presentation.splash.SplashActivity"
             android:exported="true"
@@ -39,25 +38,26 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.HOME" />
-                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
 
+        <!-- Main kiosk screen -->
         <activity
             android:name=".presentation.main.MainActivity"
             android:exported="false"
             android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|uiMode"
-            android:launchMode="singleInstance"
+            android:launchMode="singleTask"
             android:screenOrientation="unspecified"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Admin panel -->
         <activity
             android:name=".presentation.admin.AdminActivity"
             android:exported="false"
             android:theme="@style/Theme.Kiosko.Admin"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- FileProvider for camera / file upload -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
