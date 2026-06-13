@@ -51,9 +51,9 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
     private val longPressHandler = Handler(Looper.getMainLooper())
     private val longPressRunnable = Runnable { abrirAdmin() }
 
-    // Se activa cuando el popup lanza una impresión; impide que window.close()
-    // destruya el WebView antes de que el diálogo de Android termine de usarlo.
-    private var popupPrintRequested = false
+    // window.close() llega al UI thread antes que Android.print() (que pasa
+    // por el hilo del puente JS), así que nunca destruimos el popup al instante.
+    // Lo ocultamos y limpiamos a los 90 s para que la PrintDocumentAdapter siga viva.
     private val popupCleanupHandler = Handler(Looper.getMainLooper())
     private val popupCleanupRunnable = Runnable { cerrarPopup() }
 
@@ -243,33 +243,28 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
         )
         popup.webChromeClient = object : WebChromeClient() {
             override fun onCloseWindow(window: WebView) {
-                if (popupPrintRequested) {
-                    // Sólo oculta el contenedor — el WebView sigue vivo
-                    // para que la PrintDocumentAdapter pueda leer su contenido.
-                    // Se destruye automáticamente después de 90 segundos.
-                    runOnUiThread {
-                        binding.popupContainer.gone()
-                        popupCleanupHandler.removeCallbacks(popupCleanupRunnable)
-                        popupCleanupHandler.postDelayed(popupCleanupRunnable, 90_000)
-                    }
-                } else {
-                    runOnUiThread { cerrarPopup() }
+                // NUNCA destruir al instante: puede haber una impresión en vuelo.
+                // Sólo ocultamos el contenedor; el WebView sigue adjunto al árbol
+                // de vistas para que PrintDocumentAdapter pueda renderizar el ticket.
+                runOnUiThread {
+                    binding.popupContainer.gone()
+                    popupCleanupHandler.removeCallbacks(popupCleanupRunnable)
+                    popupCleanupHandler.postDelayed(popupCleanupRunnable, 90_000)
+                    Logger.i(tag, "Popup ocultado — limpieza en 90 s")
                 }
             }
             override fun onProgressChanged(view: WebView, newProgress: Int) {
                 if (newProgress == 100) {
                     val url = view.url ?: return
-                    if (url.endsWith(".pdf", ignoreCase = true)) {
-                        popupPrintRequested = true
+                    if (url.endsWith(".pdf", ignoreCase = true))
                         runOnUiThread { printHandler.printWebView(view, "PDF") }
-                    }
                 }
             }
         }
         popup.addJavascriptInterface(
             JavaScriptBridge(this, object : JavaScriptBridge.BridgeCallback {
                 override fun onPrint() {
-                    popupPrintRequested = true
+                    // Lanzar impresión en UI thread; el WebView aún está vivo aquí
                     runOnUiThread { printHandler.printWebView(popup) }
                 }
                 override fun onClosePopup() { runOnUiThread { cerrarPopup() } }
@@ -296,7 +291,6 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
 
     private fun cerrarPopup() {
         popupCleanupHandler.removeCallbacks(popupCleanupRunnable)
-        popupPrintRequested = false
         popupWebView?.apply { stopLoading(); loadUrl("about:blank"); destroy() }
         popupWebView = null
         binding.popupContainer.removeAllViews()

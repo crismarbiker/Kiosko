@@ -82,6 +82,18 @@ class AdminActivity : AppCompatActivity() {
     private fun setupButtons() {
         binding.btnSave.setOnClickListener { saveSettings() }
 
+        binding.btnExitApp.setOnClickListener {
+            MaterialAlertDialogBuilder(this)
+                .setTitle("Salir de Kiosko")
+                .setMessage("¿Desea cerrar completamente la aplicación?")
+                .setPositiveButton("Salir") { _, _ ->
+                    try { stopLockTask() } catch (e: Exception) { /* no estaba fijada */ }
+                    finishAffinity()
+                }
+                .setNegativeButton("Cancelar", null)
+                .show()
+        }
+
         binding.btnClearCache.setOnClickListener {
             MaterialAlertDialogBuilder(this)
                 .setTitle("Limpiar Caché")
