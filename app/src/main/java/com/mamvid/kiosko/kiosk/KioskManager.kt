@@ -3,8 +3,10 @@ package com.mamvid.kiosko.kiosk
 import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
+import android.graphics.Rect
 import android.os.Build
 import android.view.WindowManager
+import androidx.annotation.RequiresApi
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -91,6 +93,36 @@ class KioskManager(private val activity: Activity) {
         } catch (e: Exception) {
             Logger.w(tag, "Stop lock task failed: ${e.message}")
         }
+    }
+
+    // Bloquea los gestos de navegación (deslizar desde bordes) usando
+    // startLockTask() y exclusión de gestos del sistema (API 29+).
+    // startLockTask() sin device-owner muestra el diálogo "Fijar pantalla" de Android.
+    fun enableGestureLock() {
+        startLockTask()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
+                val decorView = activity.window.decorView
+                val w = decorView.width.takeIf { it > 0 } ?: 1080
+                val h = decorView.height.takeIf { it > 0 } ?: 1920
+                decorView.systemGestureExclusionRects = listOf(Rect(0, 0, w, h))
+            } catch (e: Exception) {
+                Logger.w(tag, "systemGestureExclusionRects: ${e.message}")
+            }
+        }
+        Logger.i(tag, "Gesture lock enabled")
+    }
+
+    fun disableGestureLock() {
+        stopLockTask()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
+                activity.window.decorView.systemGestureExclusionRects = emptyList()
+            } catch (e: Exception) {
+                Logger.w(tag, "clearGestureExclusion: ${e.message}")
+            }
+        }
+        Logger.i(tag, "Gesture lock disabled")
     }
 
     val isActive: Boolean get() = kioskActive

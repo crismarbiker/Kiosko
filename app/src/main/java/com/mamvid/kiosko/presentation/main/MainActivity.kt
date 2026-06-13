@@ -51,6 +51,12 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
     private val longPressHandler = Handler(Looper.getMainLooper())
     private val longPressRunnable = Runnable { abrirAdmin() }
 
+    // Se activa cuando el popup lanza una impresión; impide que window.close()
+    // destruya el WebView antes de que el diálogo de Android termine de usarlo.
+    private var popupPrintRequested = false
+    private val popupCleanupHandler = Handler(Looper.getMainLooper())
+    private val popupCleanupRunnable = Runnable { cerrarPopup() }
+
     private val tag = "MainActivity"
 
     private val filePickerLauncher = registerForActivityResult(
@@ -236,17 +242,36 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
             }
         )
         popup.webChromeClient = object : WebChromeClient() {
-            override fun onCloseWindow(window: WebView) { cerrarPopup() }
+            override fun onCloseWindow(window: WebView) {
+                if (popupPrintRequested) {
+                    // Sólo oculta el contenedor — el WebView sigue vivo
+                    // para que la PrintDocumentAdapter pueda leer su contenido.
+                    // Se destruye automáticamente después de 90 segundos.
+                    runOnUiThread {
+                        binding.popupContainer.gone()
+                        popupCleanupHandler.removeCallbacks(popupCleanupRunnable)
+                        popupCleanupHandler.postDelayed(popupCleanupRunnable, 90_000)
+                    }
+                } else {
+                    runOnUiThread { cerrarPopup() }
+                }
+            }
             override fun onProgressChanged(view: WebView, newProgress: Int) {
                 if (newProgress == 100) {
                     val url = view.url ?: return
-                    if (url.endsWith(".pdf", ignoreCase = true)) printHandler.printWebView(view, "PDF")
+                    if (url.endsWith(".pdf", ignoreCase = true)) {
+                        popupPrintRequested = true
+                        runOnUiThread { printHandler.printWebView(view, "PDF") }
+                    }
                 }
             }
         }
         popup.addJavascriptInterface(
             JavaScriptBridge(this, object : JavaScriptBridge.BridgeCallback {
-                override fun onPrint() { printHandler.printWebView(popup) }
+                override fun onPrint() {
+                    popupPrintRequested = true
+                    runOnUiThread { printHandler.printWebView(popup) }
+                }
                 override fun onClosePopup() { runOnUiThread { cerrarPopup() } }
                 override fun onRestartApp() {}
                 override fun onShowToast(message: String) {
@@ -270,6 +295,8 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
     }
 
     private fun cerrarPopup() {
+        popupCleanupHandler.removeCallbacks(popupCleanupRunnable)
+        popupPrintRequested = false
         popupWebView?.apply { stopLoading(); loadUrl("about:blank"); destroy() }
         popupWebView = null
         binding.popupContainer.removeAllViews()
@@ -293,6 +320,9 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
 
             if (settings.fullscreenEnabled || settings.kioskModeEnabled) kioskManager.enableFullscreen()
             else kioskManager.showSystemBars()
+
+            if (settings.gestureLockEnabled || settings.kioskModeEnabled) kioskManager.enableGestureLock()
+            else kioskManager.disableGestureLock()
         } catch (e: Exception) {
             Logger.w(tag, "aplicarConfiguracion: ${e.message}")
         }
@@ -397,6 +427,7 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
 
     override fun onDestroy() {
         longPressHandler.removeCallbacksAndMessages(null)
+        popupCleanupHandler.removeCallbacksAndMessages(null)
         binding.webView.apply { stopLoading(); destroy() }
         cerrarPopup()
         super.onDestroy()

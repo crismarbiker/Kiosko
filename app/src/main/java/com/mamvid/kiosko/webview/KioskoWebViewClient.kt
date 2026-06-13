@@ -33,6 +33,16 @@ class KioskoWebViewClient(
     override fun onPageFinished(view: WebView, url: String) {
         super.onPageFinished(view, url)
         Logger.d(tag, "Page finished: $url")
+        // Intercepta window.print() nativo para redirigirlo al puente Android
+        view.evaluateJavascript("""
+            (function() {
+                if (window._kioskoPrintOverridden) return;
+                window._kioskoPrintOverridden = true;
+                window.print = function() {
+                    try { Android.print(); } catch(e) {}
+                };
+            })();
+        """.trimIndent(), null)
         callback.onPageFinished(url)
     }
 

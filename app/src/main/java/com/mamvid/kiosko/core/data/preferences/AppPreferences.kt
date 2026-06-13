@@ -21,6 +21,7 @@ class AppPreferences(private val context: Context) {
         val KEY_BACKUP_URL = stringPreferencesKey("backup_url")
         val KEY_PASSWORD = stringPreferencesKey("admin_password")
         val KEY_KIOSK_MODE = booleanPreferencesKey("kiosk_mode")
+        val KEY_GESTURE_LOCK = booleanPreferencesKey("gesture_lock")
         val KEY_EXIT_PROTECTION = booleanPreferencesKey("exit_protection")
         val KEY_FULLSCREEN = booleanPreferencesKey("fullscreen")
         val KEY_ORIENTATION = stringPreferencesKey("orientation")
@@ -45,6 +46,7 @@ class AppPreferences(private val context: Context) {
             prefs[KEY_BACKUP_URL] = settings.backupUrl
             prefs[KEY_PASSWORD] = settings.adminPassword
             prefs[KEY_KIOSK_MODE] = settings.kioskModeEnabled
+            prefs[KEY_GESTURE_LOCK] = settings.gestureLockEnabled
             prefs[KEY_EXIT_PROTECTION] = settings.exitProtectionEnabled
             prefs[KEY_FULLSCREEN] = settings.fullscreenEnabled
             prefs[KEY_ORIENTATION] = settings.orientation.name
@@ -66,6 +68,7 @@ class AppPreferences(private val context: Context) {
         backupUrl = this[KEY_BACKUP_URL] ?: AppConfig.DEFAULT_BACKUP_URL,
         adminPassword = this[KEY_PASSWORD] ?: AppConfig.DEFAULT_PASSWORD,
         kioskModeEnabled = this[KEY_KIOSK_MODE] ?: false,
+        gestureLockEnabled = this[KEY_GESTURE_LOCK] ?: false,
         exitProtectionEnabled = this[KEY_EXIT_PROTECTION] ?: false,
         fullscreenEnabled = this[KEY_FULLSCREEN] ?: true,
         orientation = runCatching {

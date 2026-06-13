@@ -5,6 +5,7 @@ data class AppSettings(
     val backupUrl: String = "",
     val adminPassword: String = "admin123",
     val kioskModeEnabled: Boolean = false,
+    val gestureLockEnabled: Boolean = false,
     val exitProtectionEnabled: Boolean = false,
     val fullscreenEnabled: Boolean = true,
     val orientation: ScreenOrientation = ScreenOrientation.LANDSCAPE,

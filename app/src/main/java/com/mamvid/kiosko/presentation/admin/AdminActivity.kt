@@ -50,6 +50,7 @@ class AdminActivity : AppCompatActivity() {
         binding.etBackupUrl.setText(settings.backupUrl)
         binding.etPassword.setText(settings.adminPassword)
         binding.switchKioskMode.isChecked = settings.kioskModeEnabled
+        binding.switchGestureLock.isChecked = settings.gestureLockEnabled
         binding.switchExitProtection.isChecked = settings.exitProtectionEnabled
         binding.switchFullscreen.isChecked = settings.fullscreenEnabled
         binding.switchKeepScreenOn.isChecked = settings.keepScreenOn
@@ -147,6 +148,7 @@ class AdminActivity : AppCompatActivity() {
             backupUrl = binding.etBackupUrl.text.toString().trim(),
             adminPassword = binding.etPassword.text.toString().takeIf { it.isNotBlank() } ?: "admin123",
             kioskModeEnabled = binding.switchKioskMode.isChecked,
+            gestureLockEnabled = binding.switchGestureLock.isChecked,
             exitProtectionEnabled = binding.switchExitProtection.isChecked,
             fullscreenEnabled = binding.switchFullscreen.isChecked,
             keepScreenOn = binding.switchKeepScreenOn.isChecked,
