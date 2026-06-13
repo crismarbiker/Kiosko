@@ -310,6 +310,7 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
 
     private fun ocultarPantallaSetup() {
         binding.setupContainer.gone()
+        binding.webView.requestFocus()
     }
 
     private fun observarViewModel() {

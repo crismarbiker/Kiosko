@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.MenuItem
-import android.widget.ArrayAdapter
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -33,16 +32,9 @@ class AdminActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = "Panel de Administración"
 
-        setupOrientationDropdown()
         setupButtons()
         observeSettings()
         populateDeviceInfo()
-    }
-
-    private fun setupOrientationDropdown() {
-        val options = ScreenOrientation.values().map { it.label }
-        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, options)
-        binding.actvOrientation.setAdapter(adapter)
     }
 
     private fun observeSettings() {
@@ -65,7 +57,7 @@ class AdminActivity : AppCompatActivity() {
         binding.switchAllowSsl.isChecked = settings.allowSslErrors
         binding.switchDeveloperMode.isChecked = settings.developerModeEnabled
         binding.etAutoReloadMinutes.setText(settings.autoReloadMinutes.toString())
-        binding.actvOrientation.setText(settings.orientation.label, false)
+        binding.switchLandscape.isChecked = settings.orientation == ScreenOrientation.LANDSCAPE
         updateConnectionStatus()
     }
 
@@ -146,9 +138,7 @@ class AdminActivity : AppCompatActivity() {
         }
         binding.tilUrl.error = null
 
-        val orientationLabel = binding.actvOrientation.text.toString()
-        val orientation = ScreenOrientation.values().firstOrNull { it.label == orientationLabel }
-            ?: ScreenOrientation.AUTO
+        val orientation = if (binding.switchLandscape.isChecked) ScreenOrientation.LANDSCAPE else ScreenOrientation.AUTO
 
         val autoReloadMinutes = binding.etAutoReloadMinutes.text.toString().toIntOrNull() ?: 60
 

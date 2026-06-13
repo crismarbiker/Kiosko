@@ -67,10 +67,10 @@ class AppPreferences(private val context: Context) {
         adminPassword = this[KEY_PASSWORD] ?: AppConfig.DEFAULT_PASSWORD,
         kioskModeEnabled = this[KEY_KIOSK_MODE] ?: false,
         exitProtectionEnabled = this[KEY_EXIT_PROTECTION] ?: false,
-        fullscreenEnabled = this[KEY_FULLSCREEN] ?: false,
+        fullscreenEnabled = this[KEY_FULLSCREEN] ?: true,
         orientation = runCatching {
-            ScreenOrientation.valueOf(this[KEY_ORIENTATION] ?: ScreenOrientation.AUTO.name)
-        }.getOrDefault(ScreenOrientation.AUTO),
+            ScreenOrientation.valueOf(this[KEY_ORIENTATION] ?: ScreenOrientation.LANDSCAPE.name)
+        }.getOrDefault(ScreenOrientation.LANDSCAPE),
         autoReloadEnabled = this[KEY_AUTO_RELOAD] ?: false,
         autoReloadMinutes = this[KEY_AUTO_RELOAD_MINUTES] ?: AppConfig.DEFAULT_AUTO_RELOAD_MINUTES,
         keepScreenOn = this[KEY_KEEP_SCREEN_ON] ?: true,

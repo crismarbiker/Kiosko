@@ -48,6 +48,8 @@ class KioskoWebView @JvmOverloads constructor(
 
         isScrollbarFadingEnabled = true
         scrollBarStyle = SCROLLBARS_INSIDE_OVERLAY
+        isFocusable = true
+        isFocusableInTouchMode = true
         Logger.i(tag, "WebView settings configured")
     }
 
