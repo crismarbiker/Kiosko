@@ -136,7 +136,10 @@
                         <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switchKioskMode"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            android:textOn=""
+                            android:textOff=""
+                            app:showText="false" />
                     </LinearLayout>
 
                     <View android:layout_width="match_parent" android:layout_height="1dp"
@@ -158,7 +161,10 @@
                         <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switchExitProtection"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            android:textOn=""
+                            android:textOff=""
+                            app:showText="false" />
                     </LinearLayout>
 
                     <View android:layout_width="match_parent" android:layout_height="1dp"
@@ -180,7 +186,10 @@
                         <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switchFullscreen"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            android:textOn=""
+                            android:textOff=""
+                            app:showText="false" />
                     </LinearLayout>
 
                     <View android:layout_width="match_parent" android:layout_height="1dp"
@@ -202,7 +211,10 @@
                         <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switchKeepScreenOn"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            android:textOn=""
+                            android:textOff=""
+                            app:showText="false" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -272,7 +284,10 @@
                         <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switchAutoReload"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            android:textOn=""
+                            android:textOff=""
+                            app:showText="false" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -343,7 +358,10 @@
                         <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switchAllowSsl"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            android:textOn=""
+                            android:textOff=""
+                            app:showText="false" />
                     </LinearLayout>
 
                     <View android:layout_width="match_parent" android:layout_height="1dp"
@@ -365,7 +383,10 @@
                         <com.google.android.material.materialswitch.MaterialSwitch
                             android:id="@+id/switchDeveloperMode"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content"
+                            android:textOn=""
+                            android:textOff=""
+                            app:showText="false" />
                     </LinearLayout>
 
                 </LinearLayout>
