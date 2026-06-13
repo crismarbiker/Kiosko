@@ -14,7 +14,7 @@ class JavaScriptBridge(
     interface BridgeCallback {
         fun onPrint()
         fun onClosePopup()
-        fun onRestart()
+        fun onRestartApp()
         fun onShowToast(message: String)
     }
 
@@ -59,7 +59,7 @@ class JavaScriptBridge(
     @JavascriptInterface
     fun restart() {
         Logger.i("JSBridge", "restart() invoked")
-        callback.onRestart()
+        callback.onRestartApp()
     }
 
     @JavascriptInterface

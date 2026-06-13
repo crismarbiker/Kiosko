@@ -248,7 +248,7 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
             JavaScriptBridge(this, object : JavaScriptBridge.BridgeCallback {
                 override fun onPrint() { printHandler.printWebView(popup) }
                 override fun onClosePopup() { runOnUiThread { cerrarPopup() } }
-                override fun onRestart() {}
+                override fun onRestartApp() {}
                 override fun onShowToast(message: String) {
                     runOnUiThread { Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show() }
                 }
@@ -290,6 +290,9 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
 
             if (settings.kioskModeEnabled) kioskManager.enableKioskMode()
             else kioskManager.disableKioskMode()
+
+            if (settings.fullscreenEnabled || settings.kioskModeEnabled) kioskManager.enableFullscreen()
+            else kioskManager.showSystemBars()
         } catch (e: Exception) {
             Logger.w(tag, "aplicarConfiguracion: ${e.message}")
         }
@@ -363,7 +366,7 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
         runOnUiThread { printHandler.printWebView(binding.webView) }
     }
     override fun onClosePopup() { runOnUiThread { cerrarPopup() } }
-    override fun onRestart() {
+    override fun onRestartApp() {
         Logger.i(tag, "Reinicio vía JS")
         finish(); startActivity(intent)
     }
@@ -374,7 +377,7 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
     // ── Ciclo de vida ─────────────────────────────────────────────
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus && currentSettings.kioskModeEnabled) {
+        if (hasFocus && (currentSettings.kioskModeEnabled || currentSettings.fullscreenEnabled)) {
             try { kioskManager.enableFullscreen() } catch (e: Exception) { Logger.w(tag, "onWindowFocus: ${e.message}") }
         }
     }

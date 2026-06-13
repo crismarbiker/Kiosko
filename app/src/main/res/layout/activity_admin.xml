@@ -133,13 +133,12 @@
                             android:text="Modo Kiosco"
                             android:textSize="16sp"
                             android:textColor="@color/colorOnSurface" />
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switchKioskMode"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textOn=""
-                            android:textOff=""
-                            app:showText="false" />
+                            android:textOff="" />
                     </LinearLayout>
 
                     <View android:layout_width="match_parent" android:layout_height="1dp"
@@ -158,13 +157,12 @@
                             android:text="Protección de Salida"
                             android:textSize="16sp"
                             android:textColor="@color/colorOnSurface" />
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switchExitProtection"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textOn=""
-                            android:textOff=""
-                            app:showText="false" />
+                            android:textOff="" />
                     </LinearLayout>
 
                     <View android:layout_width="match_parent" android:layout_height="1dp"
@@ -196,13 +194,12 @@
                                 android:textSize="12sp"
                                 android:textColor="@color/colorOnBackgroundSecondary" />
                         </LinearLayout>
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switchFullscreen"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textOn=""
-                            android:textOff=""
-                            app:showText="false" />
+                            android:textOff="" />
                     </LinearLayout>
 
                     <View android:layout_width="match_parent" android:layout_height="1dp"
@@ -221,13 +218,12 @@
                             android:text="Pantalla Siempre Activa"
                             android:textSize="16sp"
                             android:textColor="@color/colorOnSurface" />
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switchKeepScreenOn"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textOn=""
-                            android:textOff=""
-                            app:showText="false" />
+                            android:textOff="" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -282,13 +278,12 @@
                                 android:textSize="12sp"
                                 android:textColor="@color/colorOnBackgroundSecondary" />
                         </LinearLayout>
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switchLandscape"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textOn=""
-                            android:textOff=""
-                            app:showText="false" />
+                            android:textOff="" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -330,13 +325,12 @@
                             android:text="Recarga Automática"
                             android:textSize="16sp"
                             android:textColor="@color/colorOnSurface" />
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switchAutoReload"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textOn=""
-                            android:textOff=""
-                            app:showText="false" />
+                            android:textOff="" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -404,13 +398,12 @@
                                 android:textSize="12sp"
                                 android:textColor="@color/colorOnBackgroundSecondary" />
                         </LinearLayout>
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switchAllowSsl"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textOn=""
-                            android:textOff=""
-                            app:showText="false" />
+                            android:textOff="" />
                     </LinearLayout>
 
                     <View android:layout_width="match_parent" android:layout_height="1dp"
@@ -429,13 +422,12 @@
                             android:text="Modo Desarrollador"
                             android:textSize="16sp"
                             android:textColor="@color/colorOnSurface" />
-                        <com.google.android.material.materialswitch.MaterialSwitch
+                        <androidx.appcompat.widget.SwitchCompat
                             android:id="@+id/switchDeveloperMode"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textOn=""
-                            android:textOff=""
-                            app:showText="false" />
+                            android:textOff="" />
                     </LinearLayout>
 
                 </LinearLayout>
