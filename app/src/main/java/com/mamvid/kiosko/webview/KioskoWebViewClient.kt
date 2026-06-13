@@ -27,6 +27,10 @@ class KioskoWebViewClient(
     override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
         Logger.d(tag, "Page started: $url")
+        // Inyección temprana: si la página llama window.print() en su propio
+        // evento load, esta versión ya estará lista (funciona en muchos casos).
+        view.evaluateJavascript(
+            "window.print=function(){try{Android.print();}catch(e){}};", null)
         callback.onPageStarted(url)
     }
 

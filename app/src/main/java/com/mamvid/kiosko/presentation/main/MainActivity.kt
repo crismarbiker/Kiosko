@@ -232,11 +232,26 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
     private fun abrirPopup(resultMsg: Message) {
         cerrarPopup()
         val popup = KioskoWebView(this)
+        // Flag local: evita lanzar dos diálogos de impresión si tanto la
+        // inyección JS como el auto-print de onPageFinished disparan a la vez.
+        var printDisparado = false
+
         popup.webViewClient = KioskoWebViewClient(
             allowSslErrors = currentSettings.allowSslErrors,
             callback = object : KioskoWebViewClient.WebViewClientCallback {
                 override fun onPageStarted(url: String) {}
-                override fun onPageFinished(url: String) {}
+                override fun onPageFinished(url: String) {
+                    // Auto-imprimir el popup 800 ms después de cargarse.
+                    // Cubre el caso donde window.print() fue llamado antes
+                    // de que nuestra inyección de onPageStarted corriera.
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        if (!printDisparado && popupWebView != null) {
+                            printDisparado = true
+                            Logger.i(tag, "Auto-print desde onPageFinished")
+                            printHandler.printWebView(popup)
+                        }
+                    }, 800)
+                }
                 override fun onError(errorCode: Int, description: String, url: String) {}
                 override fun onHttpError(statusCode: Int, url: String) {}
             }
@@ -264,8 +279,13 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
         popup.addJavascriptInterface(
             JavaScriptBridge(this, object : JavaScriptBridge.BridgeCallback {
                 override fun onPrint() {
-                    // Lanzar impresión en UI thread; el WebView aún está vivo aquí
-                    runOnUiThread { printHandler.printWebView(popup) }
+                    runOnUiThread {
+                        if (!printDisparado) {
+                            printDisparado = true
+                            Logger.i(tag, "Print desde JS bridge")
+                            printHandler.printWebView(popup)
+                        }
+                    }
                 }
                 override fun onClosePopup() { runOnUiThread { cerrarPopup() } }
                 override fun onRestartApp() {}
