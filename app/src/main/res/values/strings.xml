@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kiosko</string>
+    <string name="app_version">v1.0.0</string>
+
+    <!-- Error messages -->
+    <string name="error_no_connection">Sin conexión a internet</string>
+    <string name="error_reconnecting">Reconectando...</string>
+    <string name="error_ssl">Error de certificado SSL</string>
+    <string name="error_generic">Error al cargar la página</string>
+
+    <!-- Admin -->
+    <string name="admin_title">Panel de Administración</string>
+    <string name="admin_password_hint">Contraseña</string>
+    <string name="admin_wrong_password">Contraseña incorrecta</string>
+    <string name="admin_saved">Configuración guardada</string>
+
+    <!-- Buttons -->
+    <string name="btn_retry">Reintentar</string>
+    <string name="btn_save">Guardar</string>
+    <string name="btn_cancel">Cancelar</string>
+    <string name="btn_restart">Reiniciar</string>
+
+    <!-- Content descriptions -->
+    <string name="cd_logo">Logo</string>
+    <string name="cd_no_connection">Sin conexión</string>
+
+    <!-- File provider authority -->
+    <string name="file_provider_authority" translatable="false">com.mamvid.kiosko.fileprovider</string>
+</resources>
