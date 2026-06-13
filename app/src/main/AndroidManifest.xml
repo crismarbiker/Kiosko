@@ -28,36 +28,28 @@
         android:largeHeap="true"
         tools:targetApi="31">
 
-        <!-- Splash / Entry point -->
+        <!-- Pantalla principal — punto de entrada directo -->
         <activity
-            android:name=".presentation.splash.SplashActivity"
+            android:name=".presentation.main.MainActivity"
             android:exported="true"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|uiMode"
+            android:launchMode="singleTask"
             android:screenOrientation="unspecified"
-            android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.Kiosko.Splash">
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- Main kiosk screen -->
-        <activity
-            android:name=".presentation.main.MainActivity"
-            android:exported="false"
-            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|uiMode"
-            android:launchMode="singleTask"
-            android:screenOrientation="unspecified"
-            android:windowSoftInputMode="adjustResize" />
-
-        <!-- Admin panel -->
+        <!-- Panel de administración -->
         <activity
             android:name=".presentation.admin.AdminActivity"
             android:exported="false"
             android:theme="@style/Theme.Kiosko.Admin"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- FileProvider for camera / file upload -->
+        <!-- FileProvider para cámara / subida de archivos -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

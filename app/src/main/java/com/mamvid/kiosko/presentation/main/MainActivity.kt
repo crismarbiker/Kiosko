@@ -46,10 +46,10 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
     private var popupWebView: KioskoWebView? = null
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
 
-    private var logoTapCount = 0
+    private var tapCount = 0
     private var lastTapTime = 0L
     private val longPressHandler = Handler(Looper.getMainLooper())
-    private val longPressRunnable = Runnable { triggerAdminAccess() }
+    private val longPressRunnable = Runnable { abrirAdmin() }
 
     private val tag = "MainActivity"
 
@@ -60,12 +60,16 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
         filePathCallback = null
     }
 
+    // Modo configuración: la URL aún es la predeterminada o está en blanco
+    private fun enModoConfiguracion() =
+        currentSettings.url.isBlank() || currentSettings.url == AppConfig.DEFAULT_URL
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         try {
             binding = ActivityMainBinding.inflate(layoutInflater)
         } catch (e: Exception) {
-            Logger.e(tag, "Layout inflation failed: ${e.message}")
+            Logger.e(tag, "Error al inflar layout: ${e.message}")
             finish()
             return
         }
@@ -75,17 +79,17 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
         printHandler = PrintHandler(this)
 
         kioskManager.setupWindowFlags()
-        try { setupWebView() } catch (e: Exception) { Logger.e(tag, "setupWebView failed: ${e.message}") }
-        setupHiddenAdminAccess()
-        setupBackPress()
-        setupRetryButton()
-        observeViewModel()
+        try { setupWebView() } catch (e: Exception) { Logger.e(tag, "Error al iniciar WebView: ${e.message}") }
+        setupAccesoAdmin()
+        setupBotonConfigurar()
+        setupBotonReintentar()
+        setupBotonAtras()
+        observarViewModel()
 
-        Logger.i(tag, "MainActivity created")
+        Logger.i(tag, "MainActivity creada")
     }
 
     private fun setupWebView() {
-        // Avoid `apply {}` on View to prevent `tag` resolving to View.getTag() inside nested objects
         binding.webView.webViewClient = KioskoWebViewClient(
             allowSslErrors = currentSettings.allowSslErrors,
             callback = object : KioskoWebViewClient.WebViewClientCallback {
@@ -101,7 +105,7 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
                     binding.progressBar.gone()
                 }
                 override fun onHttpError(statusCode: Int, url: String) {
-                    Logger.w(tag, "HTTP error $statusCode")
+                    Logger.w(tag, "Error HTTP $statusCode")
                 }
             }
         )
@@ -113,11 +117,11 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
                     if (progress == 100) binding.progressBar.gone()
                 }
                 override fun onCreatePopupWindow(resultMsg: Message): Boolean {
-                    openPopupOverlay(resultMsg)
+                    abrirPopup(resultMsg)
                     return true
                 }
                 override fun onClosePopupWindow() {
-                    closePopupOverlay()
+                    cerrarPopup()
                 }
                 override fun onShowFileChooser(
                     filePathCallback: ValueCallback<Array<Uri>>,
@@ -137,12 +141,14 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
         )
     }
 
-    private fun setupHiddenAdminAccess() {
+    // Configura la zona oculta de acceso al panel admin
+    // (5 taps rápidos o mantener 3 segundos en esquina inferior izquierda)
+    private fun setupAccesoAdmin() {
         binding.adminTriggerArea.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     longPressHandler.postDelayed(longPressRunnable, AppConfig.ADMIN_LONG_PRESS_DURATION_MS)
-                    handleTap()
+                    contarTap()
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     longPressHandler.removeCallbacks(longPressRunnable)
@@ -152,45 +158,37 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
         }
     }
 
-    private fun handleTap() {
-        val now = System.currentTimeMillis()
-        if (now - lastTapTime > AppConfig.ADMIN_TAP_TIMEOUT_MS) logoTapCount = 0
-        logoTapCount++
-        lastTapTime = now
-        Logger.d(tag, "Admin tap: $logoTapCount/${AppConfig.ADMIN_TAP_COUNT}")
-        if (logoTapCount >= AppConfig.ADMIN_TAP_COUNT) {
-            logoTapCount = 0
+    private fun contarTap() {
+        val ahora = System.currentTimeMillis()
+        if (ahora - lastTapTime > AppConfig.ADMIN_TAP_TIMEOUT_MS) tapCount = 0
+        tapCount++
+        lastTapTime = ahora
+        Logger.d(tag, "Tap admin: $tapCount/${AppConfig.ADMIN_TAP_COUNT}")
+        if (tapCount >= AppConfig.ADMIN_TAP_COUNT) {
+            tapCount = 0
             longPressHandler.removeCallbacks(longPressRunnable)
-            triggerAdminAccess()
+            abrirAdmin()
         }
     }
 
-    private fun triggerAdminAccess() {
-        Logger.i(tag, "Admin access triggered")
-        val dialog = AdminAuthDialog()
-        dialog.currentSettings = currentSettings
-        dialog.onAuthenticated = {
-            if (currentSettings.kioskModeEnabled) {
-                try { kioskManager.disableKioskMode() } catch (e: Exception) { Logger.w(tag, "disableKiosk: ${e.message}") }
-            }
+    // Botón visible en la pantalla de configuración inicial
+    private fun setupBotonConfigurar() {
+        binding.btnGoToConfig.setOnClickListener {
             startActivity(Intent(this, AdminActivity::class.java))
         }
-        dialog.show(supportFragmentManager, "admin_auth")
     }
 
-    private fun setupBackPress() {
+    private fun setupBotonReintentar() {
+        binding.btnRetry.setOnClickListener { viewModel.triggerReload() }
+    }
+
+    private fun setupBotonAtras() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (popupWebView != null) {
-                    closePopupOverlay()
-                    return
-                }
-                if (binding.webView.canGoBack()) {
-                    binding.webView.goBack()
-                    return
-                }
-                if (currentSettings.exitProtectionEnabled) {
-                    showExitDialog()
+                if (popupWebView != null) { cerrarPopup(); return }
+                if (binding.webView.canGoBack()) { binding.webView.goBack(); return }
+                if (!enModoConfiguracion() && currentSettings.exitProtectionEnabled) {
+                    mostrarDialogoSalir()
                 } else {
                     finish()
                 }
@@ -198,22 +196,35 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
         })
     }
 
-    private fun showExitDialog() {
+    // Acceso al panel admin:
+    // - En modo configuración inicial: entra directo sin contraseña
+    // - Con URL configurada: pide contraseña
+    private fun abrirAdmin() {
+        Logger.i(tag, "Acceso admin solicitado")
+        if (enModoConfiguracion()) {
+            startActivity(Intent(this, AdminActivity::class.java))
+            return
+        }
+        val dialog = AdminAuthDialog()
+        dialog.currentSettings = currentSettings
+        dialog.onAuthenticated = {
+            if (currentSettings.kioskModeEnabled) {
+                try { kioskManager.disableKioskMode() } catch (e: Exception) { Logger.w(tag, "desactivar kiosk: ${e.message}") }
+            }
+            startActivity(Intent(this, AdminActivity::class.java))
+        }
+        dialog.show(supportFragmentManager, "admin_auth")
+    }
+
+    private fun mostrarDialogoSalir() {
         val dialog = ExitProtectionDialog()
         dialog.currentSettings = currentSettings
         dialog.onExitConfirmed = { finish() }
         dialog.show(supportFragmentManager, "exit_protection")
     }
 
-    private fun setupRetryButton() {
-        binding.btnRetry.setOnClickListener {
-            viewModel.triggerReload()
-        }
-    }
-
-    private fun openPopupOverlay(resultMsg: Message) {
-        closePopupOverlay()
-
+    private fun abrirPopup(resultMsg: Message) {
+        cerrarPopup()
         val popup = KioskoWebView(this)
         popup.webViewClient = KioskoWebViewClient(
             allowSslErrors = currentSettings.allowSslErrors,
@@ -225,22 +236,18 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
             }
         )
         popup.webChromeClient = object : WebChromeClient() {
-            override fun onCloseWindow(window: WebView) {
-                closePopupOverlay()
-            }
+            override fun onCloseWindow(window: WebView) { cerrarPopup() }
             override fun onProgressChanged(view: WebView, newProgress: Int) {
                 if (newProgress == 100) {
                     val url = view.url ?: return
-                    if (url.endsWith(".pdf", ignoreCase = true)) {
-                        printHandler.printWebView(view, "PDF")
-                    }
+                    if (url.endsWith(".pdf", ignoreCase = true)) printHandler.printWebView(view, "PDF")
                 }
             }
         }
         popup.addJavascriptInterface(
             JavaScriptBridge(this, object : JavaScriptBridge.BridgeCallback {
                 override fun onPrint() { printHandler.printWebView(popup) }
-                override fun onClosePopup() { runOnUiThread { closePopupOverlay() } }
+                override fun onClosePopup() { runOnUiThread { cerrarPopup() } }
                 override fun onRestart() {}
                 override fun onShowToast(message: String) {
                     runOnUiThread { Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show() }
@@ -259,66 +266,76 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
         )
         binding.popupContainer.visible()
         popupWebView = popup
-
-        Logger.i(tag, "Popup overlay opened")
+        Logger.i(tag, "Popup abierto")
     }
 
-    private fun closePopupOverlay() {
-        popupWebView?.apply {
-            stopLoading()
-            loadUrl("about:blank")
-            destroy()
-        }
+    private fun cerrarPopup() {
+        popupWebView?.apply { stopLoading(); loadUrl("about:blank"); destroy() }
         popupWebView = null
         binding.popupContainer.removeAllViews()
         binding.popupContainer.gone()
-        Logger.i(tag, "Popup overlay closed")
+        Logger.i(tag, "Popup cerrado")
     }
 
-    private fun applySettings(settings: AppSettings) {
+    private fun aplicarConfiguracion(settings: AppSettings) {
         try {
             currentSettings = settings
-
             requestedOrientation = when (settings.orientation) {
-                ScreenOrientation.PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                ScreenOrientation.PORTRAIT  -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                 ScreenOrientation.LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                ScreenOrientation.AUTO -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                ScreenOrientation.AUTO      -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
             }
-
             if (settings.keepScreenOn) kioskManager.enableKeepScreenOn()
             else kioskManager.disableKeepScreenOn()
 
             if (settings.kioskModeEnabled) kioskManager.enableKioskMode()
             else kioskManager.disableKioskMode()
         } catch (e: Exception) {
-            Logger.w(tag, "applySettings error: ${e.message}")
+            Logger.w(tag, "aplicarConfiguracion: ${e.message}")
         }
     }
 
-    private fun loadUrl(url: String) {
+    private fun cargarUrl(url: String) {
         if (url.isNotBlank()) {
-            Logger.i(tag, "Loading: $url")
+            Logger.i(tag, "Cargando: $url")
             binding.webView.loadUrl(url)
         }
     }
 
-    private fun observeViewModel() {
-        // Track loaded URL to avoid redundant reloads when StateFlow emits the same URL twice
-        // (initial placeholder value vs actual DataStore value)
-        var loadedUrl = ""
+    private fun mostrarPantallaSetup() {
+        binding.setupContainer.visible()
+        binding.webView.gone()
+        binding.errorContainer.gone()
+    }
+
+    private fun ocultarPantallaSetup() {
+        binding.setupContainer.gone()
+    }
+
+    private fun observarViewModel() {
+        var urlCargada = ""
 
         lifecycleScope.launch {
             viewModel.settings.collect { settings ->
-                applySettings(settings)
-                if (settings.url.isNotBlank() && settings.url != loadedUrl) {
-                    loadedUrl = settings.url
-                    loadUrl(settings.url)
+                aplicarConfiguracion(settings)
+                if (enModoConfiguracion()) {
+                    mostrarPantallaSetup()
+                    urlCargada = ""
+                } else {
+                    ocultarPantallaSetup()
+                    if (settings.url != urlCargada) {
+                        urlCargada = settings.url
+                        cargarUrl(settings.url)
+                    }
                 }
             }
         }
 
         lifecycleScope.launch {
             viewModel.uiState.collect { state ->
+                // No mostrar errores de red en modo configuración
+                if (enModoConfiguracion()) return@collect
+
                 if (state.showError) {
                     binding.errorContainer.visible()
                     binding.webView.gone()
@@ -332,33 +349,28 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
                 }
 
                 if (state.shouldReload) {
-                    loadedUrl = ""   // allow reload even for same URL
-                    loadUrl(currentSettings.url)
+                    urlCargada = ""
+                    cargarUrl(currentSettings.url)
                     viewModel.onReloadConsumed()
                 }
             }
         }
     }
 
-    // JavaScriptBridge.BridgeCallback
+    // ── JavaScriptBridge.BridgeCallback ──────────────────────────
     override fun onPrint() {
         runOnUiThread { printHandler.printWebView(binding.webView) }
     }
-
-    override fun onClosePopup() {
-        runOnUiThread { closePopupOverlay() }
-    }
-
+    override fun onClosePopup() { runOnUiThread { cerrarPopup() } }
     override fun onRestart() {
-        Logger.i(tag, "Restart via JS")
-        finish()
-        startActivity(intent)
+        Logger.i(tag, "Reinicio vía JS")
+        finish(); startActivity(intent)
     }
-
     override fun onShowToast(message: String) {
         runOnUiThread { Toast.makeText(this, message, Toast.LENGTH_SHORT).show() }
     }
 
+    // ── Ciclo de vida ─────────────────────────────────────────────
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus && currentSettings.kioskModeEnabled) {
@@ -382,15 +394,13 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
     override fun onDestroy() {
         longPressHandler.removeCallbacksAndMessages(null)
         binding.webView.apply { stopLoading(); destroy() }
-        closePopupOverlay()
+        cerrarPopup()
         super.onDestroy()
-        Logger.i(tag, "MainActivity destroyed")
+        Logger.i(tag, "MainActivity destruida")
     }
 
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        if (currentSettings.kioskModeEnabled) {
-            Logger.w(tag, "User tried to leave — kiosk active")
-        }
+        if (currentSettings.kioskModeEnabled) Logger.w(tag, "Usuario intentó salir — kiosk activo")
     }
 }

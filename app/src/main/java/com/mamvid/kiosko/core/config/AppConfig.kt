@@ -5,8 +5,8 @@ object AppConfig {
     const val DEFAULT_BACKUP_URL = ""
     const val DEFAULT_PASSWORD = "admin123"
 
-    const val ADMIN_LONG_PRESS_DURATION_MS = 5000L
-    const val ADMIN_TAP_COUNT = 7
+    const val ADMIN_LONG_PRESS_DURATION_MS = 3000L
+    const val ADMIN_TAP_COUNT = 5
     const val ADMIN_TAP_TIMEOUT_MS = 3000L
 
     const val RECONNECT_DELAY_MS = 5000L
