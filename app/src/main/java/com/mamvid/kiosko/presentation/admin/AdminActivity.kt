@@ -97,9 +97,12 @@ class AdminActivity : AppCompatActivity() {
         binding.btnClearCache.setOnClickListener {
             MaterialAlertDialogBuilder(this)
                 .setTitle("Limpiar Caché")
-                .setMessage("¿Desea borrar el caché del WebView?")
-                .setPositiveButton("Sí") { _, _ ->
-                    viewModel.clearCache { showToast("Caché limpiada") }
+                .setMessage("Se borrará el caché del sitio web y la app se reiniciará para aplicar los cambios.")
+                .setPositiveButton("Limpiar y Reiniciar") { _, _ ->
+                    viewModel.clearCache {
+                        showToast("Caché limpiada — reiniciando...")
+                        restartApp()
+                    }
                 }
                 .setNegativeButton("Cancelar", null)
                 .show()

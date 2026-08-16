@@ -2,15 +2,18 @@ package com.mamvid.kiosko.presentation.admin
 
 import android.app.Application
 import android.webkit.CookieManager
+import android.webkit.WebStorage
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mamvid.kiosko.core.data.preferences.AppPreferences
 import com.mamvid.kiosko.core.domain.model.AppSettings
 import com.mamvid.kiosko.core.utils.Logger
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class AdminViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -28,7 +31,13 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun clearCache(onDone: () -> Unit) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Main) {
+            // localStorage, sessionStorage, IndexedDB, WebSQL
+            WebStorage.getInstance().deleteAllData()
+            // HTTP cache en disco (archivos Chromium del WebView)
+            withContext(Dispatchers.IO) {
+                getApplication<Application>().cacheDir.deleteRecursively()
+            }
             Logger.i(tag, "Cache cleared")
             onDone()
         }

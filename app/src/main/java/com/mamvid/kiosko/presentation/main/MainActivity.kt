@@ -51,9 +51,6 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
     private val longPressHandler = Handler(Looper.getMainLooper())
     private val longPressRunnable = Runnable { abrirAdmin() }
 
-    // window.close() llega al UI thread antes que Android.print() (que pasa
-    // por el hilo del puente JS), así que nunca destruimos el popup al instante.
-    // Lo ocultamos y limpiamos a los 90 s para que la PrintDocumentAdapter siga viva.
     private val popupCleanupHandler = Handler(Looper.getMainLooper())
     private val popupCleanupRunnable = Runnable { cerrarPopup() }
 
@@ -83,6 +80,7 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
 
         kioskManager = KioskManager(this)
         printHandler = PrintHandler(this)
+        printHandler.warmUp()
 
         kioskManager.setupWindowFlags()
         try { setupWebView() } catch (e: Exception) { Logger.e(tag, "Error al iniciar WebView: ${e.message}") }
@@ -232,8 +230,13 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
     private fun abrirPopup(resultMsg: Message) {
         cerrarPopup()
         val popup = KioskoWebView(this)
-        // Flag local: evita lanzar dos diálogos de impresión si tanto la
-        // inyección JS como el auto-print de onPageFinished disparan a la vez.
+        // Sin wide viewport: el viewport CSS = physical px / density = 220 CSS px (≈58mm a 96dpi).
+        // Con useWideViewPort=true el WebView usaría 980px CSS y escalaría al 22%,
+        // haciendo las letras de ~3px en el bitmap → ilegibles aunque escales después.
+        popup.settings.useWideViewPort = false
+        popup.settings.loadWithOverviewMode = false
+        // textZoom NO se usa: con valores altos (>130%) el renderer sandbox del WebView
+        // se queda sin memoria → crash del proceso → actividad destruida + impresión abortada.
         var printDisparado = false
 
         popup.webViewClient = KioskoWebViewClient(
@@ -241,16 +244,14 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
             callback = object : KioskoWebViewClient.WebViewClientCallback {
                 override fun onPageStarted(url: String) {}
                 override fun onPageFinished(url: String) {
-                    // Auto-imprimir el popup 800 ms después de cargarse.
-                    // Cubre el caso donde window.print() fue llamado antes
-                    // de que nuestra inyección de onPageStarted corriera.
+                    // Auto-imprimir si la página no llama window.print() por su cuenta.
                     Handler(Looper.getMainLooper()).postDelayed({
                         if (!printDisparado && popupWebView != null) {
                             printDisparado = true
                             Logger.i(tag, "Auto-print desde onPageFinished")
-                            printHandler.printWebView(popup)
+                            dispararImpresion(popup)
                         }
-                    }, 800)
+                    }, 2000)
                 }
                 override fun onError(errorCode: Int, description: String, url: String) {}
                 override fun onHttpError(statusCode: Int, url: String) {}
@@ -258,21 +259,41 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
         )
         popup.webChromeClient = object : WebChromeClient() {
             override fun onCloseWindow(window: WebView) {
-                // NUNCA destruir al instante: puede haber una impresión en vuelo.
-                // Sólo ocultamos el contenedor; el WebView sigue adjunto al árbol
-                // de vistas para que PrintDocumentAdapter pueda renderizar el ticket.
                 runOnUiThread {
-                    binding.popupContainer.gone()
+                    // Capturar e imprimir ANTES de ocultar: el WebView todavía tiene el
+                    // contenido renderizado cuando llega onCloseWindow.
+                    // El sitio usa document.write() → onPageStarted/onPageFinished no disparan
+                    // → nuestro override de window.print() nunca se inyecta → el sitio llama
+                    // window.close() sin que nadie intercepte window.print().
+                    // onCloseWindow es el único evento garantizado en ese escenario.
+                    if (!printDisparado) {
+                        printDisparado = true
+                        Logger.i(tag, "Print desde onCloseWindow")
+                        dispararImpresion(popup)
+                    }
+                    binding.popupContainer.alpha = 0f
+                    binding.popupContainer.isClickable = false
                     popupCleanupHandler.removeCallbacks(popupCleanupRunnable)
                     popupCleanupHandler.postDelayed(popupCleanupRunnable, 90_000)
-                    Logger.i(tag, "Popup ocultado — limpieza en 90 s")
+                    Logger.i(tag, "Popup transparente — limpieza en 90 s")
                 }
             }
             override fun onProgressChanged(view: WebView, newProgress: Int) {
                 if (newProgress == 100) {
-                    val url = view.url ?: return
-                    if (url.endsWith(".pdf", ignoreCase = true))
-                        runOnUiThread { printHandler.printWebView(view, "PDF") }
+                    runOnUiThread {
+                        // Inyectar override aunque onPageStarted no haya disparado.
+                        // document.write() no dispara eventos de navegación pero sí
+                        // onProgressChanged → este es el momento más temprano para inyectar.
+                        view.evaluateJavascript(
+                            "if(!window._kioskoPrintOverridden){window._kioskoPrintOverridden=true;" +
+                            "window.print=function(){try{Android.print();}catch(e){}};}", null
+                        )
+                        val url = view.url ?: return@runOnUiThread
+                        if (!printDisparado && url.endsWith(".pdf", ignoreCase = true)) {
+                            printDisparado = true
+                            printHandler.printWebView(view, "PDF")
+                        }
+                    }
                 }
             }
         }
@@ -282,8 +303,10 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
                     runOnUiThread {
                         if (!printDisparado) {
                             printDisparado = true
-                            Logger.i(tag, "Print desde JS bridge")
-                            printHandler.printWebView(popup)
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                Logger.i(tag, "Print desde JS bridge")
+                                dispararImpresion(popup)
+                            }, 1500)
                         }
                     }
                 }
@@ -300,22 +323,54 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
         transport.webView = popup
         resultMsg.sendToTarget()
 
-        binding.popupContainer.addView(
-            popup,
-            ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-        )
+        binding.popupContainer.alpha = 1f
+        binding.popupContainer.isClickable = true
+        binding.popupContainer.setBackgroundColor(0x99000000.toInt())  // overlay oscuro
+
+        // Popup angosto: 220 CSS px ≈ 58mm. Así el ticket llena el viewport completo y
+        // capturePicture() retorna un bitmap donde el contenido ocupa el 100% del ancho.
+        // Ese bitmap se embebe a 165pt en Letter (27%) → UPS escala ×1.86 → mismo
+        // tamaño que Firefox. Si usáramos MATCH_PARENT (1280px) y el ticket usa
+        // "width:100%", el bitmap tendría contenido al 100% de Letter → UPS comprimiría ×0.51.
+        // Fórmula: popupPhysicalPx = 220 CSS px * density
+        // 220 CSS px ≈ 58mm a 96 DPI (estándar de pantalla).
+        // El BluetoothPrintHandler escala el bitmap de (220*density)px a 463 dots (203DPI×58mm).
+        // Factor de escala = 463/(220*density) ≈ 203/96 para cualquier density.
+        // Esto hace que 1 CSS px → 203/96 ≈ 2.11 dots, que es la resolución de impresión correcta.
+        val density = resources.displayMetrics.density
+        val ticketPxWidth = (220 * density).toInt()
+        val screenPxWidth = resources.displayMetrics.widthPixels
+        val leftMargin = ((screenPxWidth - ticketPxWidth) / 2).coerceAtLeast(0)
+        val lp = ViewGroup.MarginLayoutParams(ticketPxWidth, ViewGroup.LayoutParams.MATCH_PARENT)
+        lp.leftMargin = leftMargin
+        binding.popupContainer.addView(popup, lp)
+
         binding.popupContainer.visible()
         popupWebView = popup
-        Logger.i(tag, "Popup abierto")
+        Logger.i(tag, "Popup abierto: ${ticketPxWidth}px ancho (220 CSS px ≈ 58mm)")
+    }
+
+    private fun dispararImpresion(webView: KioskoWebView) {
+        Logger.i(tag, "Disparando impresión via PrintManager")
+        printHandler.printWebView(webView, "Recibo")
+        Handler(Looper.getMainLooper()).postDelayed({ cerrarPopup() }, 3000)
     }
 
     private fun cerrarPopup() {
         popupCleanupHandler.removeCallbacks(popupCleanupRunnable)
-        popupWebView?.apply { stopLoading(); loadUrl("about:blank"); destroy() }
+        val webViewToDestroy = popupWebView
         popupWebView = null
         binding.popupContainer.removeAllViews()
+        binding.popupContainer.alpha = 1f
+        binding.popupContainer.isClickable = true
+        binding.popupContainer.setBackgroundColor(0x00000000)
         binding.popupContainer.gone()
         Logger.i(tag, "Popup cerrado")
+        // Destruir el WebView en el siguiente ciclo para no bloquear el hilo principal
+        // justo cuando el diálogo de impresión se cierra y la pantalla principal vuelve.
+        Handler(Looper.getMainLooper()).postDelayed({
+            webViewToDestroy?.apply { stopLoading(); loadUrl("about:blank"); destroy() }
+        }, 200)
     }
 
     private fun aplicarConfiguracion(settings: AppSettings) {
@@ -426,14 +481,6 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        binding.webView.onResume()
-        if (currentSettings.kioskModeEnabled) {
-            try { kioskManager.enableKioskMode() } catch (e: Exception) { Logger.w(tag, "onResume: ${e.message}") }
-        }
-    }
-
     override fun onPause() {
         binding.webView.onPause()
         super.onPause()
@@ -446,6 +493,14 @@ class MainActivity : AppCompatActivity(), JavaScriptBridge.BridgeCallback {
         cerrarPopup()
         super.onDestroy()
         Logger.i(tag, "MainActivity destruida")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding.webView.onResume()
+        if (currentSettings.kioskModeEnabled) {
+            try { kioskManager.enableKioskMode() } catch (e: Exception) { Logger.w(tag, "onResume: ${e.message}") }
+        }
     }
 
     override fun onUserLeaveHint() {
